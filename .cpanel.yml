@@ -5,6 +5,7 @@ deployment:
     - /bin/cp -R branch_user  $DEPLOYPATH
     - /bin/cp -R client  $DEPLOYPATH
     - /bin/cp -R company  $DEPLOYPATH
+    - /bin/cp -R media $DEPLOYPATH
     - /bin/cp -R employee  $DEPLOYPATH
     - /bin/cp -R private_tenant  $DEPLOYPATH
     - /bin/cp -R shared_tenant  $DEPLOYPATH
