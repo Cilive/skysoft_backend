@@ -1,0 +1,13 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/$USER/erp.foretech.pw/
+    - /bin/cp -R branch_user  $DEPLOYPATH
+    - /bin/cp -R client  $DEPLOYPATH
+    - /bin/cp -R company  $DEPLOYPATH
+    - /bin/cp -R employee  $DEPLOYPATH
+    - /bin/cp -R private_tenant  $DEPLOYPATH
+    - /bin/cp -R shared_tenant  $DEPLOYPATH
+    - /bin/cp -R skysoft_project  $DEPLOYPATH
+    - /bin/cp manage.py  $DEPLOYPATH
+    - /bin/cp requirements.txt  $DEPLOYPATH
