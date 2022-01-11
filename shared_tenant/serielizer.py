@@ -1,4 +1,7 @@
 from django.db import models
+
+
+from company.models import BankAccountMaster
 from .models import BranchManager, Branches, Employee, User,Company
 from client.models import Client, Domain
 from rest_framework import  serializers
@@ -21,6 +24,7 @@ class ComapanyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['employee_compnay_id'] = Employee.objects.values('id','company_id').get(user=user).get('id') if user.is_employee else None
         token['tenant_name'] = User.objects.values('username').get(id=user.id) 
         # if user.is_employee else None
+        # print("token insfo",token)
         return token
     def validate(self, attrs):
         # company= Employee.objects.values('company_id').get(user=self.user)
@@ -39,10 +43,16 @@ class ComapanyTokenObtainPairSerializer(TokenObtainPairSerializer):
         data.update({'company_id': Company.objects.values('id').get(user=self.user).get('id') if self.user.is_company else None})
         data.update({'emp_company_user_id': Company.objects.values('user').get(id=Employee.objects.values('id','company_id').get(user=self.user).get('id')) if self.user.is_employee else None})
         data.update({'emp_tenant_name':User.objects.values('username').get(id=data['emp_company_user_id']['user']) if self.user.is_employee else None })
+        # print("Logged in user is a company/owner",data['is_company'])  
+        # # if data['is_company']:
+        # #     print("the logged in user is admin/company")
+        # #     print("self.user",self.user.id)
+        # #     company=Company.objects.get(user=self.user)
+        # #     print("company data",company)
+        # #     if company:
+        # #         bank_account=BankAccountMaster.objects.get(company=company)
+        # #         print("company have filled account details")
 
-      
-        
-       
         return data
 
 

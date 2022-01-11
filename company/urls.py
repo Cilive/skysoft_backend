@@ -1,6 +1,6 @@
 from django.urls import path,include
 # from . import views
-from .views import  BankViewSet, CustomerViewSet, DebtorsReportViewSet, DepositViewSet,  DispenceViewSet, EmployeeSaleReportViewSet,FuelRegistrationViewSet, IncomeReportViewSet,  InvoiceViewSet,  OwnerViewSet, PurchaseReportViewSet, ReciptViewSet, SaleReportViewSet, SupplierReportViewSet, VatRegistrationViewset
+from .views import  BankViewSet, CustomerViewSet, DailySessionViewSet, DebtorsReportViewSet, DepositViewSet,  DispenceViewSet, EmployeeSaleReportViewSet,FuelRegistrationViewSet, IncomeReportViewSet,  InvoiceViewSet,  OwnerViewSet, PurchaseReportViewSet, ReciptViewSet, SaleReportViewSet, SupplierReportViewSet, VatRegistrationViewset
 from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework import routers
 
@@ -24,6 +24,8 @@ router.register("report/purchase", PurchaseReportViewSet, basename="purchase_rep
 router.register("report/income", IncomeReportViewSet, basename="income")
 router.register("report/supplier", SupplierReportViewSet, basename="supplier_statement")
 router.register("report/debtors", DebtorsReportViewSet, basename="debtors_statement")
+router.register("session", DailySessionViewSet, basename="session")
+
 
 
 

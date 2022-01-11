@@ -11,7 +11,7 @@ from django.db.models import Q
 
 
 
-from company.models import BankAccountMaster,  Contact,  Deposit, Dispence, Expense, FuelMaster,  Invoice, Owner, PaymentOut,  VatMaster
+from company.models import BankAccountMaster,  Contact, DailySession,  Deposit, Dispence, Expense, FuelMaster,  Invoice, Owner, PaymentOut,  VatMaster
 from shared_tenant.models import Company, Employee
 from shared_tenant.serielizer import CompanySerializer, EmployeeRegistrationSerializer
 
@@ -248,10 +248,20 @@ class DepositCreateSerializer(serializers.ModelSerializer):
             amount =self.validated_data['amount'],
             date = self.validated_data['date'],
             owner = self.validated_data['owner'],
+            branches = self.validated_data['branches'],
             company = Company.objects.get(user=self.context['request'].user)
         )
-        
         deposit.save()
+        print("deposit compnay=",deposit.company.id)
+        print("deposit amount=",deposit.amount)
+        print("deposit amount=",deposit.branches)
+        
+        bank_account = BankAccountMaster.objects.get(company=deposit.company,branches=deposit.branches)
+        print("bank account affected",bank_account.balance)
+        new_balance=bank_account.balance+deposit.amount
+        print("new balance ",new_balance)
+        BankAccountMaster.objects.filter(company=deposit.company,branches=deposit.branches).update(balance=new_balance)  
+
         return deposit
         
     # def to_representation(self, instance):
@@ -299,7 +309,6 @@ class InvoiceCreateSerializer(serializers.ModelSerializer):
         print("type=",type)
         # last_invoice = Invoice.objects.filter(Q(type=type) ).order_by('id').last()
         last_invoice = Invoice.objects.filter(type=2 ).order_by('id').last()
-        print("last invoice",last_invoice.invoice_no)
         if not last_invoice:
             new_invoice_int= 1
         else:
@@ -328,47 +337,8 @@ class InvoiceCreateSerializer(serializers.ModelSerializer):
         )
         invoice.save()
         print("===============invoice created succesfully==========",invoice.id)
-        
-        # for fuel in fuels:
-           
-        #     print("fuel loop",fuel)
-        #     fuel_obj=FuelMaster.objects.filter(id = fuel), 
-
-        #     print("fue object in fuel master",fuel_obj)
-
-        #     invoice_line = InvoiceLines(
-        #     fuel=fuel_obj.id
-        #     )
-        #     invoice_line.save
-
-        # fuel_obj=FuelMaster.objects.filter(pk__in=fuels), 
-        # print("fuel objects=",fuel_obj)
-        # invoice_id=invoice.id
-        # print("invoice id after save and befor loop",invoice_id)
-        
-        # for each in fuel_obj:
-        #     print("each fuel object",each[1])
-        #     for obj in each:
-        #         invoice_line=InvoiceLines(
-        #         fuel=obj,
-        #         invoice=Invoice.objects.get(id=invoice_id),
-        #         liter=10
-
-        #         )
-            
-        #         invoice_line.save()
-
-      
-        # for fuel in fuels:           
-        #     print("fuel loop",fuel)
-        #     fuel_obj=FuelMaster.objects.filter(id = fuel), 
-        #     for each in fuel_obj:
-        #        invoice_line=InvoiceLines()
-        #        invoice_line.fuel=each
-        #        invoice_line.save()
-
-        return invoice
-
+        self.instance = invoice
+        return self.instance
 
 class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -378,7 +348,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
 class InvoiceUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
-        fields = ['date','qty','payment_type','fuel','paid_amt']
+        fields = ['date','qty','payment_type','fuel','paid_amt','balance_amt','total_amt']
 
 
 
@@ -396,23 +366,24 @@ class ReciptCreateSerializer(serializers.ModelSerializer):
 
         print("type=",type)
         last_invoice = Invoice.objects.filter(type=1).order_by('id').last()
-        print("last invoice",last_invoice.invoice_no)
+        # print("last invoice",last_invoice.invoice_no)
         if not last_invoice:
-            return 1
-        invoice_no = last_invoice.invoice_no
-        invoice_int = int(invoice_no)
-        new_recipt_int = invoice_int + 1
-        print(last_invoice)
-        print("New invocie number",new_recipt_int)
-        print(self.validated_data)
+            new_recipt_int= 1
+        else:
+            invoice_no = last_invoice.invoice_no
+            invoice_int = int(invoice_no)
+            new_recipt_int = invoice_int + 1
+            print(last_invoice)
+            print("New invocie number",new_recipt_int)
+            print(self.validated_data)
 
 
 
         company = Company.objects.get(user=self.context['request'].user)
         try:
-          vat=VatMaster.objects.get(company=company,branches=branch)
+            vat=VatMaster.objects.get(company=company,branches=branch)
         except VatMaster.DoesNotExist:
-           vat = None
+            vat = None
 
         try:
             print("checking is there a bank account")
@@ -430,7 +401,11 @@ class ReciptCreateSerializer(serializers.ModelSerializer):
 
         )
         invoice.save()
-        return invoice
+        self.instance = invoice
+        return self.instance
+
+        
+        # return data
     
     
 class ReciptSerializer(serializers.ModelSerializer):
@@ -441,7 +416,7 @@ class ReciptSerializer(serializers.ModelSerializer):
 class ReciptUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
-        fields = ['date','qty','payment_type','fuel']
+        fields = ['date','qty','payment_type','fuel','paid_amt','balance_amt','total_amt']
 
 
 class SaleReportSerializer(serializers.ModelSerializer):
@@ -737,3 +712,50 @@ class DebtorsReportSerializer(serializers.ModelSerializer):
             pass       
         
         return response
+
+
+
+class FirstSessionCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DailySession
+        fields = '__all__'
+
+    def save(self):
+        # print("serielizer running")
+        # print("serielizer running",)
+        branch_info=self.context['data']
+        # print("serielizer bank balance",branch_info.balance)
+        # print("serielizer cash balance",branch_info.opening_balance)
+        # print("serielizer bank balance",branch_info.initial_balance)
+        cash_opening_balance=branch_info.opening_balance
+        bank_account_opening_balance=branch_info.initial_balance
+        session = DailySession(
+            branches=self.validated_data['branches'],
+            opening_balance_bank=bank_account_opening_balance,
+            cash_opening_balance=cash_opening_balance
+        )
+        session.save()
+        self.instance = session
+        return self.instance
+
+class SessionCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DailySession
+        fields = '__all__'
+
+    def save(self):
+        print("session create serielizer running")
+        previous_session=self.context['data']
+        print("prevoious day balance",previous_session.closing_balance_cash)
+        # print("serielizer cash balance",branch_info.opening_balance)
+        # print("serielizer bank balance",branch_info.initial_balance)
+        cash_opening_balance=previous_session.closing_balance_cash
+        bank_account_opening_balance=previous_session.closing_balance_bank
+        session = DailySession(
+            branches=self.validated_data['branches'],
+            opening_balance_bank=bank_account_opening_balance,
+            cash_opening_balance=cash_opening_balance
+        )
+        session.save()
+        self.instance = session
+        return self.instance

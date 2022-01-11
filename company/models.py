@@ -32,7 +32,15 @@ class FuelMaster(models.Model):
 
 
 
+class Owner(models.Model):
+    # branch=models.ForeignKey(Branch, on_delete=models.CASCADE, null=True)
+    branches = models.ForeignKey(Branches, on_delete=models.CASCADE, null=True)
 
+    name = models.CharField(max_length=30)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE,
+                            null=True)
+    phone = models.CharField(max_length=30, unique=True)
+    email = models.EmailField(max_length=100,unique=True)
 
 
 
@@ -45,13 +53,33 @@ class BankAccountMaster(models.Model):
     acc_no = models.CharField(max_length=30)
     initial_balance = models.FloatField(null=True)
     balance = models.FloatField(null=True)
-    branch = models.CharField(max_length=30)
+    cash_balance = models.FloatField(null=True)
+    credit_balance = models.FloatField(null=True)
+    debit_balance = models.FloatField(null=True)
+    cash_credit_balance = models.FloatField(null=True)
+    cash_debit_balance = models.FloatField(null=True)
+    opening_balance = models.FloatField(null=True)
+    cash_ac_name = models.CharField(max_length=30)
+    is_default = models.BooleanField(default=False)
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True)
     class Meta:
         db_table = 'bank_account_master'
-        
     def __str__(self):
         return self.bank_name
+
+class CashMaster(models.Model):
+    branches = models.ForeignKey(Branches, on_delete=models.CASCADE, null=True)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    opening_balance = models.FloatField(null=True)
+    balance = models.FloatField(null=True)
+    cash_ac_name = models.CharField(max_length=30)
+    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True)
+    credit_balance = models.FloatField(null=True)
+    class Meta:
+        db_table = 'cash_master'
+    def __str__(self):
+        return self.cash_ac_name
 
 
 class PaymentOut(models.Model):
@@ -91,15 +119,7 @@ class Expense(models.Model):
         return str(self.id)
 
 
-class Owner(models.Model):
-    # branch=models.ForeignKey(Branch, on_delete=models.CASCADE, null=True)
-    branches = models.ForeignKey(Branches, on_delete=models.CASCADE, null=True)
 
-    name = models.CharField(max_length=30)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE,
-                            null=True)
-    phone = models.CharField(max_length=30, unique=True)
-    email = models.EmailField(max_length=100,unique=True)
 
 class Deposit(models.Model):
     # branch=models.ForeignKey(Branch, on_delete=models.CASCADE, null=True)
@@ -194,9 +214,7 @@ class Invoice(models.Model):
 
     invoice_no = models.BigIntegerField( null=True, blank=True,default=None)
     branches = models.ForeignKey(Branches, on_delete=models.CASCADE, null=True)
-
     contact = models.ForeignKey(Contact, on_delete=models.CASCADE,null=True,verbose_name='contact',blank=True)
-
     emp = models.ForeignKey(Employee, on_delete=models.CASCADE,null=True,verbose_name='employee',blank=True)
     date = models.DateTimeField(auto_now_add=True)
     fuel = models.ForeignKey(FuelMaster, on_delete=models.CASCADE,null=True,verbose_name='fuel')
@@ -300,3 +318,24 @@ class Invoice(models.Model):
 
 
 
+class DailySession(models.Model):
+    branches = models.ForeignKey(Branches, on_delete=models.CASCADE, null=True)
+    opening_balance_bank = models.FloatField(null=True)
+    cash_opening_balance = models.FloatField(null=True)
+    closing_balance_bank = models.FloatField(null=True)
+    closing_balance_cash = models.FloatField(null=True)
+    cash_opening_balance = models.FloatField(null=True)
+    bank_balance = models.FloatField(null=True)
+    cash_balance = models.FloatField(null=True)
+    date = models.DateTimeField(auto_now_add=True)
+    credit_balance_bank = models.FloatField(null=True)
+    debit_balance_bank = models.FloatField(null=True)
+    cash_credit_balance = models.FloatField(null=True)
+    cash_debit_balance = models.FloatField(null=True)
+    is_default = models.BooleanField(default=False)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True)
+    class Meta:
+        db_table = 'daily_session_master'
+    def __str__(self):
+        return self.id
